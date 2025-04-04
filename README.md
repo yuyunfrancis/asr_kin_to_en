@@ -1,235 +1,343 @@
-# Audio Transcription & Translation API
+# Kinyarwanda-English Transcription & Translation App
 
-A robust API service for audio transcription, translation, and caption generation, specializing in English and Kinyarwanda languages.
+A full-featured application for transcribing audio in Kinyarwanda and English with bidirectional translation capabilities and subtitle generation.
+
+![Screenshot of the application](https://example.com/app_screenshot.png)
 
 ## Features
 
 - **Advanced Audio Transcription**:
-  - Support for English and Kinyarwanda audio
-  - Multiple transcription models (Whisper, NeMo, specialized Kinyarwanda models)
-  - Accurate timestamps and chunking
+
+  - Transcribe Kinyarwanda audio using state-of-the-art models
+  - Transcribe English audio with high accuracy
+  - Supports both NeMo and Whisper models for Kinyarwanda
 
 - **Bidirectional Translation**:
-  - Kinyarwanda → English
-  - English → Kinyarwanda
-  - Preservation of timestamps during translation
+
+  - Translate Kinyarwanda → English
+  - Translate English → Kinyarwanda
+  - Uses specialized models for each direction
 
 - **Caption Generation**:
-  - SRT captions for video subtitling
-  - WebVTT captions for web videos
-  - Support for bilingual captions
 
-- **Full Processing Pipeline**:
-  - Combined transcription → translation → caption generation
-  - Asynchronous job processing
-  - Status tracking and result retrieval
+  - Create SRT captions for video subtitling
+  - Create WebVTT captions for web videos
+  - Includes both original and translated text
 
-## Deployment Guide
+- **Robust Processing**:
+  - Smart chunking for better timestamps
+  - Duplicate content removal
+  - Multiple fallback mechanisms
 
-### Hardware Requirements
+## System Requirements
 
-| Component | Recommended Specification |
-|-----------|--------------------------|
-| CPU | 8+ cores |
-| RAM | 16GB+ |
-| GPU | NVIDIA GPU with 8GB+ VRAM (T4 or better) |
-| Storage | 100GB+ SSD |
-| Network | 1Gbps+ connection |
+- **Operating System**: Linux, macOS, or Windows 10+
+- **Python**: 3.9 or higher (Python 3.11 recommended)
+- **RAM**: Minimum 8GB, recommended 16GB+
+- **Storage**: At least 10GB of free space for models
+- **GPU**: Optional but recommended for faster processing (NVIDIA with CUDA support)
+- **Internet Connection**: Required for initial model downloads
 
-### Software Requirements
+## Installation Methods
 
-- Ubuntu 20.04 LTS or later
-- Docker and Docker Compose
-- NVIDIA drivers and NVIDIA Docker
-- Redis (for queue management)
-- Nginx (for reverse proxy)
+### Method 1: Standard Installation
 
-### Deployment Steps
-
-1. **Prepare the server**
+1. Clone the repository:
 
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
-# Install Docker and Docker Compose
-sudo apt install docker.io docker-compose -y
-
-# Install NVIDIA drivers and container toolkit
-sudo apt install nvidia-driver-525 -y
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-sudo apt update && sudo apt install -y nvidia-container-toolkit
-sudo systemctl restart docker
+git clone https://github.com/yuyunfrancis/asr_kin_to_en.git
+cd asr_kin_to_en
 ```
 
-2. **Set up the application**
+2. Create and activate a virtual environment:
 
 ```bash
-# Clone repository
-git clone https://github.com/your-repo/audio-transcription-api.git
-cd audio-transcription-api
+# For Linux/macOS
+python -m venv venv
+source venv/bin/activate
 
-# Create required directories
-mkdir -p models_cache temp_files
-
-# Set up environment file
-cp .env.example .env
-# Edit .env with your Hugging Face token
+# For Windows
+python -m venv venv
+venv\Scripts\activate
 ```
 
-3. **Configure Docker Compose**
+3. Install the required packages:
 
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  api:
-    build: .
-    restart: always
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./models_cache:/app/models_cache
-      - ./temp_files:/app/temp_files
-    environment:
-      - HUGGING_FACE_TOKEN=${HUGGING_FACE_TOKEN}
-      - MODELS_CACHE_DIR=/app/models_cache
-      - TEMP_FILE_DIR=/app/temp_files
-      - USE_GPU=True
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  redis:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-
-  nginx:
-    image: nginx:1.21-alpine
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - api
-
-volumes:
-  redis-data:
+```bash
+pip install -r requirements.txt
 ```
 
-4. **Configure Nginx**
+### Method 2: Using Conda Environment
 
-Create `nginx.conf`:
+1. Clone the repository:
 
-```nginx
-server {
-    listen 80;
-    server_name _;
+```bash
+git clone https://github.com/yuyunfrancis/asr_kin_to_en.git
+cd asr_kin_to_en
+```
 
-    location / {
-        proxy_pass http://api:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        client_max_body_size 50M;
-        proxy_read_timeout 300s;
-    }
+2. Create and activate a conda environment:
+
+```bash
+conda create -n transcription python=3.11
+conda activate transcription
+```
+
+3. Install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Method 3: Manual Installation with Custom NeMo Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yuyunfrancis/asr_kin_to_en.git
+cd asr_kin_to_en
+```
+
+2. Create and activate a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install PyTorch (with CUDA if available):
+
+```bash
+# For CUDA support (check compatibility with your GPU)
+pip install torch==2.0.1+cu118 torchaudio==2.0.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+
+# For CPU only
+pip install torch torchaudio
+```
+
+4. Install NeMo Toolkit manually:
+
+```bash
+# Install NeMo with all dependencies
+pip install "nemo_toolkit[all]"
+
+# If the above fails, try the following alternative
+pip install Cython
+pip install nemo_toolkit
+```
+
+5. Install remaining dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Configuration
+
+1. Create a `.env` file in the project root with your Hugging Face token:
+
+```
+HUGGING_FACE_TOKEN=your_token_here
+```
+
+2. (Optional) Configure GPU usage by setting the following environment variables:
+
+```bash
+# For Linux/macOS
+export CUDA_VISIBLE_DEVICES=0  # Use GPU 0
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512  # Memory management
+
+# For Windows
+set CUDA_VISIBLE_DEVICES=0
+set PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+```
+
+## Running the Application
+
+### Starting the App
+
+```bash
+streamlit run app.py
+```
+
+The app will be available at http://localhost:8501 by default.
+
+### Alternative Startup Options
+
+```bash
+# Run on a specific port
+streamlit run app.py --server.port 8080
+
+# Enable server headless mode
+streamlit run app.py --server.headless true
+
+# Specify a different browser
+streamlit run app.py --browser.serverAddress="0.0.0.0"
+
+# Debug mode
+streamlit run app.py --logger.level=debug
+```
+
+## Usage Guide
+
+1. **Select Language and Model**:
+
+   - For Kinyarwanda audio: Choose either NeMo or Whisper Kinyarwanda
+   - For English audio: Use Whisper Small
+
+2. **Configure Advanced Settings**:
+
+   - Adjust chunk size and overlap for Whisper models
+   - Enable/disable Whisper fallback for NeMo
+   - Enable/disable Montreal Forced Aligner for precision timestamps
+   - Configure subtitle generation
+
+3. **Upload Audio**:
+
+   - Upload an audio file (MP3, WAV, or OGG format)
+   - Maximum file size is determined by your Streamlit configuration
+
+4. **Start Processing**:
+
+   - Click "Start Transcription"
+   - Monitor progress through the status indicators
+
+5. **View and Download Results**:
+   - Original transcription text
+   - Translation (if enabled)
+   - Time-stamped text for both original and translation
+   - Caption files (SRT/VTT if enabled)
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### NeMo Installation Problems
+
+If you encounter issues with NeMo installation:
+
+```bash
+# Try installing specific versions
+pip install "nemo_toolkit[all]==1.17.0"
+
+# Or install core components separately
+pip install nemo_toolkit
+pip install sentencepiece
+pip install matplotlib
+```
+
+#### GPU Memory Errors
+
+```bash
+# Reduce batch size to save memory
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+
+# Or force CPU usage
+export CUDA_VISIBLE_DEVICES=""
+```
+
+#### Model Download Failures
+
+```bash
+# Retry with specific cache directory
+export HF_HOME=/path/to/huggingface/cache
+pip install -U huggingface_hub
+huggingface-cli login --token your_token_here
+```
+
+#### Streamlit Connection Issues
+
+If the app starts but the browser doesn't open:
+
+```bash
+# Try accessing manually at
+http://localhost:8501
+
+# Or specify address explicitly
+streamlit run app.py --server.address 127.0.0.1
+```
+
+### Logs and Debugging
+
+Log files are created in the project directory:
+
+- `app.log`: General application logs
+- `models.log`: Model loading and inference logs
+- `errors.log`: Error messages and stack traces
+
+Enable verbose logging by creating a `logging.conf` file or setting:
+
+```bash
+export LOGLEVEL=DEBUG
+```
+
+## Project Structure
+
+```
+project_root/
+├── app.py                  # Main Streamlit application
+├── requirements.txt        # Project dependencies
+├── .env                    # Environment variables (for tokens)
+├── temp_dir/               # Temporary directory for uploads
+└── src/
+    ├── __init__.py         # Makes src a proper package
+    ├── models.py           # Model loading and initialization
+    ├── transcription.py    # Transcription functions
+    ├── translation.py      # Translation functions
+    ├── utils.py            # Utility functions
+    └── captions.py         # Caption generation functions
+```
+
+## Models Used
+
+- **Kinyarwanda Transcription**:
+
+  - NeMo Kinyarwanda STT Conformer Model: `mbazaNLP/Kinyarwanda_nemo_stt_conformer_model`
+  - Whisper Small Kinyarwanda: `mbazaNLP/Whisper-Small-Kinyarwanda`
+
+- **English Transcription**:
+
+  - OpenAI Whisper Small: `openai/whisper-small`
+
+- **Translation**:
+  - Kinyarwanda → English: `RogerB/marian-finetuned-multidataset-kin-to-en`
+  - English → Kinyarwanda: `mbazaNLP/Nllb_finetuned_education_en_kin`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [MbazaNLP](https://huggingface.co/mbazaNLP) for the Kinyarwanda models
+- [OpenAI](https://github.com/openai/whisper) for the Whisper model
+- [NVIDIA](https://github.com/NVIDIA/NeMo) for the NeMo toolkit
+- [Hugging Face](https://huggingface.co/) for model hosting and transformers library
+- [Streamlit](https://streamlit.io/) for the user interface framework
+
+## Contact
+
+Project Link: [https://github.com/yuyunfrancis/asr_kin_to_en](https://github.com/yuyunfrancis/asr_kin_to_en)
+
+## Citation
+
+If you use this application in your research, please cite:
+
+```
+@software{asr_kin_to_en,
+  author = {Francis Yuyun},
+  title = {Kinyarwanda-English Transcription & Translation App},
+  year = {2023},
+  url = {https://github.com/yuyunfrancis/asr_kin_to_en}
 }
 ```
-
-5. **Deploy and run the API**
-
-```bash
-# Start the services
-docker-compose up -d
-
-# Check logs
-docker-compose logs -f
-```
-
-6. **Test the API**
-
-```bash
-# Test the API status
-curl http://localhost/api/status
-
-# The API documentation is available at:
-# http://localhost/docs
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/process-audio` | POST | Complete pipeline: transcription → translation → captions |
-| `/api/transcribe` | POST | Audio transcription only |
-| `/api/translate` | POST | Text translation between languages |
-| `/api/generate-captions` | POST | Generate captions from transcription results |
-| `/api/jobs/{job_id}` | GET | Check the status of a job |
-
-## Example API Usage
-
-### Process Audio (Full Pipeline)
-
-```javascript
-// JavaScript example using fetch
-async function processAudio(audioFile) {
-  const formData = new FormData();
-  formData.append('file', audioFile);
-  formData.append('source_language', 'english');
-  formData.append('transcription_model', 'whisper');
-  formData.append('translation_options', JSON.stringify({
-    enabled: true,
-    target_language: 'kinyarwanda'
-  }));
-  formData.append('caption_options', JSON.stringify({
-    enabled: true,
-    formats: ['srt', 'vtt']
-  }));
-
-  const response = await fetch('http://your-api-domain/api/process-audio', {
-    method: 'POST',
-    body: formData
-  });
-
-  const job = await response.json();
-  return job.job_id; // Use this ID to check status
-}
-
-// Check job status
-async function checkJobStatus(jobId) {
-  const response = await fetch(`http://your-api-domain/api/jobs/${jobId}`);
-  return await response.json();
-}
-```
-
-## Performance Optimization Tips
-
-1. **Model Caching**: The API automatically caches models, but for faster startup after deployment, consider warming up the cache by making an initial request for each language you plan to support.
-
-2. **Resource Allocation**: If processing many files concurrently, increase the number of worker processes and adjust the GPU memory allocation.
-
-3. **File Management**: The API automatically cleans up temporary files, but monitor disk usage if processing large volumes of audio.
-
-## Monitoring and Maintenance
-
-- Monitor GPU usage: `nvidia-smi`
-- Check system resource utilization: `htop`
-- View API logs: `docker-compose logs -f api`
-- Restart services: `docker-compose restart`
-- Update deployment: `git pull && docker-compose down && docker-compose up -d --build`
-

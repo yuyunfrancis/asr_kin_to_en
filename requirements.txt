@@ -1,0 +1,21 @@
+streamlit
+torch
+torchaudio>=2.0.0
+transformers
+python-dotenv>=1.0.0
+librosa>=0.10.0
+numpy>=1.24.0
+soundfile>=0.12.1
+scipy>=1.10.0
+huggingface_hub>=0.16.0
+pandas>=2.0.0
+sentencepiece>=0.1.99
+
+# NeMo toolkit will be installed dynamically when needed
+# For manual installation: pip install "nemo_toolkit[all]"
+
+# For GPU acceleration (if available)
+# cudatoolkit
+
+# Optional: For precise alignment
+# montreal-forced-aligner
